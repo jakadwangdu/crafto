@@ -33,10 +33,10 @@ class ExampleRobolectricTest {
   val composeTestRule = createComposeRule()
 
   @Test
-  fun `verify app name resource is Crafto`() {
+  fun `verify app name resource is Jaadu App`() {
     val context = ApplicationProvider.getApplicationContext<Context>()
     val appName = context.getString(R.string.app_name)
-    assertEquals("Crafto", appName)
+    assertEquals("Jaadu App", appName)
   }
 
   @Test

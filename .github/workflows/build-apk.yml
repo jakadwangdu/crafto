@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -60,6 +63,9 @@ jobs:
         run: |
           if [ -f "./debug.keystore" ]; then
             echo "debug.keystore already exists."
+          elif [ -f "./debug.keystore.base64" ]; then
+            echo "Decoding debug.keystore from debug.keystore.base64..."
+            base64 -d ./debug.keystore.base64 > ./debug.keystore
           else
             echo "Generating temporary debug keystore..."
             keytool -genkeypair \
@@ -142,6 +148,7 @@ jobs:
 
       - name: Publish APK to GitHub Releases
         id: create_release
+        if: github.event_name != 'pull_request'
         continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
@@ -187,7 +194,7 @@ jobs:
             --title "$RELEASE_TITLE" \
             --notes "$RELEASE_NOTES" \
             --target "${GITHUB_SHA}" \
-            --latest
+            --latest || gh release create "$TAG_NAME" "$ASSET_PATH" --title "$RELEASE_TITLE" --notes "$RELEASE_NOTES"
           
           echo "release_tag=${TAG_NAME}" >> "$GITHUB_OUTPUT"
 
@@ -198,14 +205,14 @@ jobs:
           RELEASE_OUTCOME: ${{ steps.create_release.outcome }}
           RELEASE_TAG: debug-apk-build-${{ github.run_number }}-${{ github.run_attempt }}
           ASSET_NAME: ${{ steps.prepare_asset.outputs.asset_name }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
-          if [ "$RELEASE_OUTCOME" = "success" ]; then
+          if [ "$RELEASE_OUTCOME" = "success" ] && [ "$EVENT_NAME" != "pull_request" ]; then
             echo "=========================================="
             echo "  GitHub Release Published Successfully!  "
             echo "=========================================="
             
-            RELEASE_INFO=$(gh release view "$RELEASE_TAG" --json tagName,title,url)
-            RELEASE_URL=$(echo "$RELEASE_INFO" | grep -o '"url":"[^"]*' | grep -o '[^"]*$')
+            RELEASE_URL="https://github.com/${GITHUB_REPOSITORY}/releases/tag/${RELEASE_TAG}"
             
             echo "Release Tag:   $RELEASE_TAG"
             echo "Release Title: Debug APK Build #${GITHUB_RUN_NUMBER}"
@@ -221,15 +228,12 @@ jobs:
             echo "*(The standard Actions artifact \`app-debug-apk\` is also preserved and available under the workflow run summary.)*" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "=========================================="
-            echo "  Warning: Release Publishing Encountered an Issue  "
+            echo "  Debug APK Built Successfully!  "
             echo "=========================================="
             echo "The debug APK was built successfully and uploaded as a GitHub Actions artifact."
             echo "Artifact Name: app-debug-apk"
-            echo "Release publishing could not be completed, but the APK artifact is preserved."
             
-            echo "### ⚠️ Debug APK Build Succeeded (Artifact Available)" >> "$GITHUB_STEP_SUMMARY"
+            echo "### 📦 Debug APK Build Succeeded (Artifact Available)" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
             echo "The debug APK was compiled successfully and is available as a GitHub Actions artifact named **\`app-debug-apk\`** at the bottom of this workflow run page." >> "$GITHUB_STEP_SUMMARY"
-            echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "GitHub Release publishing did not complete, but no build outputs were lost." >> "$GITHUB_STEP_SUMMARY"
           fi
