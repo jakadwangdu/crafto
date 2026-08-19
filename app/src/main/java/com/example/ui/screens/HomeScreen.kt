@@ -150,14 +150,21 @@ fun HomeScreen(
                         }
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "Jaadu",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "✨",
+                                    fontSize = 14.sp
+                                )
+                            }
                             Text(
-                                text = "Crafto",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = "Poster & Status Maker",
+                                text = "Festival & Status Maker",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 11.sp
@@ -398,6 +405,9 @@ fun HomeScreen(
                         onQuickShare = { t ->
                             viewModel.openEditor(t)
                             viewModel.sharePoster()
+                        },
+                        onQuickDownload = { t ->
+                            viewModel.quickDownloadPoster(t)
                         }
                     )
                 }

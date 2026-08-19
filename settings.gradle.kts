@@ -22,6 +22,6 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "Crafto"
+rootProject.name = "Jaadu App"
 
 include(":app")

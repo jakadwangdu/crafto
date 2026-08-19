@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -69,6 +70,7 @@ fun PosterCard(
     onSelect: (PosterTemplate) -> Unit,
     onFavoriteToggle: (Long) -> Unit,
     onQuickShare: (PosterTemplate) -> Unit,
+    onQuickDownload: (PosterTemplate) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val startColor = remember(template.bgGradientStart) {
@@ -116,17 +118,39 @@ fun PosterCard(
                     .background(gradientBrush)
                     .clickable { onSelect(template) }
             ) {
-                // Background image if available
-                if (template.bgImageResName == "img_hero_banner") {
+                // Background festival image if available
+                val bgDrawableId = when (template.bgImageResName) {
+                    "bg_fest_diwali" -> R.drawable.bg_fest_diwali
+                    "bg_fest_holi" -> R.drawable.bg_fest_holi
+                    "bg_fest_eid" -> R.drawable.bg_fest_eid
+                    "bg_fest_ganesh" -> R.drawable.bg_fest_ganesh
+                    "bg_fest_newyear" -> R.drawable.bg_fest_newyear
+                    "img_hero_banner" -> R.drawable.img_hero_banner
+                    else -> null
+                }
+                if (bgDrawableId != null) {
                     androidx.compose.foundation.Image(
-                        painter = painterResource(id = R.drawable.img_hero_banner),
+                        painter = painterResource(id = bgDrawableId),
                         contentDescription = null,
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(140.dp)
-                            .align(Alignment.TopCenter),
+                            .fillMaxSize()
+                            .align(Alignment.Center),
                         contentScale = ContentScale.Crop,
-                        alpha = 0.45f
+                        alpha = 0.82f
+                    )
+                    // Subtle dark gradient overlay to ensure text contrast
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    listOf(
+                                        Color(0x33000000),
+                                        Color(0x55000000),
+                                        Color(0x99000000)
+                                    )
+                                )
+                            )
                     )
                 }
 
@@ -262,6 +286,22 @@ fun PosterCard(
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(
+                        onClick = { onQuickDownload(template) },
+                        modifier = Modifier
+                            .size(36.dp)
+                            .testTag("quick_download_${template.id}")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Download,
+                            contentDescription = "Download Full Image",
+                            tint = CraftoPrimary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(2.dp))
+
                     IconButton(
                         onClick = { onQuickShare(template) },
                         modifier = Modifier

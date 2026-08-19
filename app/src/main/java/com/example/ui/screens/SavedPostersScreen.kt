@@ -171,7 +171,7 @@ fun SavedPostersScreen(
                                     val shareIntent = Intent(Intent.ACTION_SEND).apply {
                                         type = "image/jpeg"
                                         putExtra(Intent.EXTRA_STREAM, uri)
-                                        putExtra(Intent.EXTRA_TEXT, "${poster.quoteSnippet}\n\n— Created with Crafto Poster App")
+                                        putExtra(Intent.EXTRA_TEXT, "${poster.quoteSnippet}\n\n— Created with Jaadu App ✨")
                                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                                     }
                                     val chooser = Intent.createChooser(shareIntent, "Share Poster")

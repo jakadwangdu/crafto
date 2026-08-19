@@ -317,7 +317,7 @@ class PosterViewModel(application: Application) : AndroidViewModel(application) 
                             quoteSnippet = (currentEditor.customQuoteText ?: template.quoteText).take(60)
                         )
                     )
-                    _userMessage.value = "Poster saved to Gallery successfully! 📸"
+                    _userMessage.value = "Full HD Poster downloaded to Gallery (Pictures/JaaduPosters)! ✨"
                     onSaved(savedPath)
                 } else {
                     _userMessage.value = "Could not save image to gallery."
@@ -326,6 +326,47 @@ class PosterViewModel(application: Application) : AndroidViewModel(application) 
                 _userMessage.value = "Save error: ${e.message}"
             } finally {
                 _editorState.update { it.copy(isSaving = false) }
+            }
+        }
+    }
+
+    fun quickDownloadPoster(template: PosterTemplate) {
+        val profile = activeProfile.value ?: SampleData.defaultPersonalProfile
+        viewModelScope.launch {
+            try {
+                _userMessage.value = "Rendering & downloading full HD poster..."
+                val bitmap = PosterBitmapRenderer.renderPoster(
+                    context = getApplication(),
+                    template = template,
+                    userProfile = profile,
+                    cutoutOffsetX = 0f,
+                    cutoutOffsetY = 0f,
+                    cutoutScaleFactor = 1.0f
+                )
+
+                val savedPath = PosterBitmapRenderer.saveBitmapToGallery(
+                    context = getApplication(),
+                    bitmap = bitmap,
+                    title = template.title
+                )
+
+                if (savedPath != null) {
+                    repository.savePoster(
+                        SavedPoster(
+                            title = template.title,
+                            category = template.category,
+                            filePath = savedPath,
+                            aspectRatio = template.aspectRatio,
+                            profileName = if (profile.profileType == ProfileType.BUSINESS) profile.businessName else profile.name,
+                            quoteSnippet = template.quoteText.take(60)
+                        )
+                    )
+                    _userMessage.value = "Full HD Poster saved to Gallery (Pictures/JaaduPosters)! 📥✨"
+                } else {
+                    _userMessage.value = "Failed to download image."
+                }
+            } catch (e: Exception) {
+                _userMessage.value = "Download error: ${e.message}"
             }
         }
     }
@@ -354,7 +395,7 @@ class PosterViewModel(application: Application) : AndroidViewModel(application) 
 
                 val shareUri = PosterBitmapRenderer.getShareableUri(getApplication(), bitmap)
                 if (shareUri != null) {
-                    val caption = "${currentEditor.customQuoteText ?: template.quoteText}\n\n— Created with Crafto Poster App"
+                    val caption = "${currentEditor.customQuoteText ?: template.quoteText}\n\n— Created with Jaadu App ✨"
                     PosterBitmapRenderer.sharePoster(getApplication(), shareUri, caption, targetPackage)
                 } else {
                     _userMessage.value = "Failed to prepare image for sharing."

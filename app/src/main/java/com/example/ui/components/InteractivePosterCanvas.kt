@@ -99,17 +99,37 @@ fun InteractivePosterCanvas(
         val canvasWidthPx = constraints.maxWidth.toFloat()
         val canvasHeightPx = constraints.maxHeight.toFloat()
 
-        // Background hero image if present
-        if (template.bgImageResName == "img_hero_banner") {
+        // Background festival image if present
+        val bgDrawableId = when (template.bgImageResName) {
+            "bg_fest_diwali" -> R.drawable.bg_fest_diwali
+            "bg_fest_holi" -> R.drawable.bg_fest_holi
+            "bg_fest_eid" -> R.drawable.bg_fest_eid
+            "bg_fest_ganesh" -> R.drawable.bg_fest_ganesh
+            "bg_fest_newyear" -> R.drawable.bg_fest_newyear
+            "img_hero_banner" -> R.drawable.img_hero_banner
+            else -> null
+        }
+        if (bgDrawableId != null) {
             androidx.compose.foundation.Image(
-                painter = painterResource(id = R.drawable.img_hero_banner),
+                painter = painterResource(id = bgDrawableId),
                 contentDescription = null,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .align(Alignment.TopCenter),
+                modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
-                alpha = 0.45f
+                alpha = 0.85f
+            )
+            // Gradient scrim for maximum typography readability
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                Color(0x33000000),
+                                Color(0x55000000),
+                                Color(0x99000000)
+                            )
+                        )
+                    )
             )
         }
 

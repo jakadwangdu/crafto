@@ -1,5 +1,5 @@
 {
-  "name": "Crafto Poster & Status Maker",
+  "name": "Jaadu App",
   "description": "Automated Poster & Status Generator App for personal greetings, festival posts, daily quotes, and business promotional posters with AI background cutout compositing.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

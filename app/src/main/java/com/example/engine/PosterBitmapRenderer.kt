@@ -258,20 +258,39 @@ object PosterBitmapRenderer {
     ) {
         val resName = template.bgImageResName ?: return
         try {
-            val resId = if (resName == "img_hero_banner") {
-                R.drawable.img_hero_banner
-            } else {
-                context.resources.getIdentifier(resName, "drawable", context.packageName)
+            val resId = when (resName) {
+                "bg_fest_diwali" -> R.drawable.bg_fest_diwali
+                "bg_fest_holi" -> R.drawable.bg_fest_holi
+                "bg_fest_eid" -> R.drawable.bg_fest_eid
+                "bg_fest_ganesh" -> R.drawable.bg_fest_ganesh
+                "bg_fest_newyear" -> R.drawable.bg_fest_newyear
+                "img_hero_banner" -> R.drawable.img_hero_banner
+                else -> context.resources.getIdentifier(resName, "drawable", context.packageName)
             }
             if (resId != 0) {
                 val bgBmp = BitmapFactory.decodeResource(context.resources, resId)
                 if (bgBmp != null) {
                     val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                        alpha = 110
+                        alpha = 210
                     }
                     val srcRect = Rect(0, 0, bgBmp.width, bgBmp.height)
-                    val destRect = Rect(0, 0, width, (height * 0.45f).toInt())
+                    val destRect = Rect(0, 0, width, height)
                     canvas.drawBitmap(bgBmp, srcRect, destRect, paint)
+
+                    // Draw dark gradient overlay across bottom for text readability
+                    val overlayPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                        shader = LinearGradient(
+                            0f, height * 0.15f, 0f, height.toFloat(),
+                            intArrayOf(
+                                Color.argb(40, 0, 0, 0),
+                                Color.argb(120, 0, 0, 0),
+                                Color.argb(200, 0, 0, 0)
+                            ),
+                            floatArrayOf(0f, 0.5f, 1f),
+                            Shader.TileMode.CLAMP
+                        )
+                    }
+                    canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), overlayPaint)
                 }
             }
         } catch (e: Exception) {
@@ -573,17 +592,17 @@ object PosterBitmapRenderer {
 
     private fun drawWatermark(canvas: Canvas, width: Int, height: Int) {
         val watermarkPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.argb(130, 255, 255, 255)
+            color = Color.argb(140, 255, 255, 255)
             textSize = 20f
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             textAlign = Paint.Align.RIGHT
             setShadowLayer(4f, 0f, 2f, Color.argb(140, 0, 0, 0))
         }
-        canvas.drawText("Created with Crafto App ✨", width - 40f, height - 190f, watermarkPaint)
+        canvas.drawText("Created with Jaadu App ✨", width - 40f, height - 190f, watermarkPaint)
     }
 
     /**
-     * Saves bitmap to device MediaStore gallery or app files, returns absolute file path.
+     * Saves full-resolution bitmap directly to device MediaStore Pictures/JaaduPosters gallery.
      */
     suspend fun saveBitmapToGallery(
         context: Context,
@@ -591,13 +610,13 @@ object PosterBitmapRenderer {
         title: String
     ): String? = withContext(Dispatchers.IO) {
         try {
-            val fileName = "Crafto_${title.replace("[^a-zA-Z0-9]".toRegex(), "_")}_${System.currentTimeMillis()}.jpg"
+            val fileName = "Jaadu_${title.replace("[^a-zA-Z0-9]".toRegex(), "_")}_${System.currentTimeMillis()}.jpg"
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 val contentValues = ContentValues().apply {
                     put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
                     put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
-                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/CraftoPosters")
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/JaaduPosters")
                     put(MediaStore.MediaColumns.IS_PENDING, 1)
                 }
 
@@ -605,7 +624,7 @@ object PosterBitmapRenderer {
                 val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
                 if (uri != null) {
                     resolver.openOutputStream(uri)?.use { stream ->
-                        bitmap.compress(Bitmap.CompressFormat.JPEG, 95, stream)
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
                     }
                     contentValues.clear()
                     contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
@@ -615,11 +634,18 @@ object PosterBitmapRenderer {
             }
 
             // Fallback for older devices or direct file path
-            val picturesDir = File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "CraftoPosters").apply { mkdirs() }
+            val picturesDir = File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "JaaduPosters").apply { mkdirs() }
             val file = File(picturesDir, fileName)
             FileOutputStream(file).use { out ->
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 95, out)
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out)
             }
+            // Trigger MediaScanner for instant gallery appearance
+            android.media.MediaScannerConnection.scanFile(
+                context,
+                arrayOf(file.absolutePath),
+                arrayOf("image/jpeg"),
+                null
+            )
             file.absolutePath
         } catch (e: Exception) {
             e.printStackTrace()
